@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang di Web Product</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #007bff;
+        }
+
+        p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .welcome-container {
+            background-color: #f8f8f8;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            width: 50%;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="welcome-container">
+        <h1>Hai, Selamat Datang di Web Banking Milestone 4</h1>
+        
+        <form action="{{ url_for('user_routes.user_login') }}" method="get">
+            <button class="Login" type="submit">Login</button>
+        </form>
+        <form action="{{ url_for('user_routes.user_register') }}" method="get">
+            <button class="Logout" type="submit">Registration</button>
+        </form>
+    </div>
+</body>
+
+</html>

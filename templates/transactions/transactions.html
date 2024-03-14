@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions</title>
+</head>
+<body>
+    <h1>Transactions</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>From Account ID</th>
+            <th>To Account ID</th>
+            <th>Amount</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Created At</th>
+        </tr>
+        {% for transaction in transactions %}
+        <tr>
+            <td>{{ transaction.id }}</td>
+            <td>{{ transaction.from_account_id }}</td>
+            <td>{{ transaction.to_account_id }}</td>
+            <td>{{ transaction.amount }}</td>
+            <td>{{ transaction.type }}</td>
+            <td>{{ transaction.description }}</td>
+            <td>{{ transaction.created_at }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
