@@ -54,6 +54,7 @@ def do_user_login():
             return jsonify({"message": "Password Salah"})
 
         login_user(user, remember=False)
+        return jsonify({"message": "Login success"})
         return redirect('/accounts')
 
     except Exception as e:
@@ -125,44 +126,24 @@ def get_user_by_id(user_id):
 @user_routes.route('/users/<int:user_id>', methods=['PUT'])
 @login_required
 def update_user(user_id):
-    # Only allow the user to update their own data
-    if current_user.id != user_id:
-        return {'error': 'Unauthorized'}, 403
-
-    # Connect to the database
     connection = engine.connect()
     Session = sessionmaker(connection)
     session = Session()
-    
-    # Get the data from the request
-    data = request.form
-    if not data:
-        return {'error': 'No data provided'}, 400
-    
-    # Extract username and email from the form data
-    new_username = data.get('username')
-    new_email = data.get('email')
-    
+    session.begin()
+
     try:
-        # Fetch the user from the database
-        user = session.query(User).filter_by(id=user_id).first()
+        print(request.form)
+        user = session.query(User).filter(User.id==user_id).first()
 
-        if user:
-            # If the user exists, update username and email
-            if new_username is not None and new_username.strip() != '':
-                user.username = new_username.strip()
-            if new_email is not None and new_email.strip() != '':
-                user.email = new_email.strip()
-            session.commit()
-            return {'message': 'User updated successfully'}, 200
-        else:
-            # If the user does not exist
-            return {'message': 'User not found'}, 404
-
+        user.username = request.form.get('userUsername', user.username)
+        user.email = request.form.get('userEmail', user.email)
+        session.commit()
+        return { "message": "Success updating data"}
     except Exception as e:
-        # If there is an error updating the user
         session.rollback()
-        return {'error': f'An error occurred: {e}'}, 500
+
+    return { "message": "Success updating data"}
+    
 
 
 

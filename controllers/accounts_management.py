@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect
+from flask import Blueprint, render_template, request, redirect, jsonify
 from models.accounts import Accounts
 from connectors.mysql_connector import engine
 from sqlalchemy.orm import sessionmaker
@@ -34,7 +34,23 @@ def get_all_accounts():
     Session = sessionmaker(connection)
     session = Session()
     accounts = session.query(Accounts).filter_by(user_id=current_user.id).all()
-    return render_template("accounts/accounts.html", accounts=accounts)
+    
+    # Mengonversi objek akun menjadi daftar kamus
+    account_list = []
+    for account in accounts:
+        account_data = {
+            'id': account.id,
+            'user_id': account.user_id,
+            'account_type': account.account_type,
+            'account_number': account.account_number,
+            'balance': account.balance,
+            'created_at': account.created_at,
+            'updated_at': account.updated_at
+        }
+        account_list.append(account_data)
+
+    # Mengirimkan respons JSON yang berisi data akun
+    return jsonify({"message": "Success get all accounts", "accounts": account_list})
 
 
 # done
@@ -46,10 +62,23 @@ def get_account_by_id(account_id):
     session = Session()
     account = session.query(Accounts).get(account_id)
     if not account:
-        return render_template("error.html", message="Account not found"), 404
+        return jsonify({"error": "Account not found"}), 404
     if account.user_id != current_user.id:
-        return render_template("error.html", message="Unauthorized"), 403
-    return render_template("accounts/account_details.html", account=account)
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Konversi data akun menjadi kamus
+    account_data = {
+        'id': account.id,
+        'user_id': account.user_id,
+        'account_type': account.account_type,
+        'account_number': account.account_number,
+        'balance': account.balance,
+        'created_at': account.created_at,
+        'updated_at': account.updated_at
+    }
+
+    # Mengirimkan respons JSON yang berisi detail akun
+    return jsonify({"message": "Success get account details", "account": account_data})
 
 
 # done
@@ -60,6 +89,8 @@ def create_account():
     Session = sessionmaker(connection)
     session = Session()
     data = request.form
+
+    # Buat objek Akun baru
     new_account = Accounts(
         user_id=current_user.id,
         account_type=data['account_type'],
@@ -68,14 +99,18 @@ def create_account():
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
+
     try:
+        # Tambahkan akun baru ke sesi dan commit perubahan
         session.add(new_account)
         session.commit()
-        return redirect("/accounts")
+        return jsonify({"message": "Success create account"}), 201
     except IntegrityError:
+        # Jika terjadi kesalahan integritas (misalnya, nomor akun sudah ada)
         session.rollback()
-        return render_template("error.html", error_message="Account already exists"), 400
+        return jsonify({"error": "Account already exists"}), 400
     finally:
+        # Tutup sesi ketika selesai
         session.close()
 
 
@@ -83,71 +118,74 @@ def create_account():
 @accounts_routes.route('/accounts/<int:account_id>', methods=['PUT'])
 @login_required
 def update_account(account_id):
-    
-    # Get the user id from the current user
+    # Dapatkan id pengguna dari pengguna saat ini
     user_id = current_user.id
     
-    # Check if the user owns the account
+    # Periksa apakah pengguna memiliki kepemilikan atas akun
     if check_account_ownership(account_id, user_id):
-        
-        # Connect to the database
+        # Ambil koneksi ke database
         connection = engine.connect()
         Session = sessionmaker(connection)
         session = Session()
         session.begin()
         
-        # Get the data from the request
+        # Dapatkan data dari permintaan
         data = request.json
         account_type = data.get('account_type')
         account_number = data.get('account_number')
         balance = data.get('balance')
         
-        # Get the account by id
-        accounts = session.query(Accounts).filter_by(id=account_id).first()
+        # Dapatkan akun berdasarkan ID
+        account = session.query(Accounts).filter_by(id=account_id).first()
         
         try:
-            # Update the account
-            accounts.account_type = account_type
-            accounts.account_number = account_number
-            accounts.balance = balance
+            # Perbarui detail akun
+            if account_type is not None:
+                account.account_type = account_type
+            if account_number is not None:
+                account.account_number = account_number
+            if balance is not None:
+                account.balance = balance
             session.commit()
-            return {'message': 'Account updated successfully'}, 200
-        
+            return jsonify({'message': 'Account updated successfully'}), 200
         except Exception as e:
-            # If there is an error updating the account
+            # Jika terjadi kesalahan saat memperbarui akun
             session.rollback()
-            return {'error': f'An error occurred: {e}'}, 500
+            return jsonify({'error': f'An error occurred: {e}'}), 500
+        finally:
+            session.close()
     else:
-        return {'error': 'Unauthorized'}, 401
+        return jsonify({'error': 'Unauthorized'}), 401
+
 
 # blom fix 
 @accounts_routes.route('/accounts/<int:account_id>', methods=['DELETE'])
 @login_required
 def delete_account(account_id):
-    
-    # Get the user id from the current user
+    # Dapatkan id pengguna dari pengguna saat ini
     user_id = current_user.id
     
-    # Check if the user owns the account
+    # Periksa apakah pengguna memiliki kepemilikan atas akun
     if check_account_ownership(account_id, user_id):
         connection = engine.connect()
         Session = sessionmaker(connection)
         session = Session()
         session.begin()
         
-        # Get the account by id
+        # Dapatkan akun berdasarkan id
         accounts = session.query(Accounts).filter_by(id=account_id).first()
         
         try:
-            # Delete the account
+            # Hapus akun
             session.delete(accounts)
             session.commit()
-            return {'message': 'Account deleted successfully'}, 200
-        
+            return jsonify({'message': 'Account deleted successfully'}), 200
         except Exception as e:
-            # If there is an error deleting the account
+            # Jika terjadi kesalahan saat menghapus akun
             session.rollback()
-            return {'error': f'An error occurred: {e}'}, 500
+            return jsonify({'error': f'An error occurred: {e}'}), 500
+        finally:
+            session.close()
     else:
-        return {'error': 'Unauthorized'}, 401
+        return jsonify({'error': 'Unauthorized'}), 401
 
