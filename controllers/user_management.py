@@ -132,17 +132,26 @@ def update_user(user_id):
     session.begin()
 
     try:
-        print(request.form)
-        user = session.query(User).filter(User.id==user_id).first()
+        user = session.query(User).filter(User.id == user_id).first()
 
-        user.username = request.form.get('userUsername', user.username)
-        user.email = request.form.get('userEmail', user.email)
-        session.commit()
-        return { "message": "Success updating data"}
+        if user:
+            # Perbarui atribut user sesuai dengan data yang diberikan
+            user.username = request.form.get('userusername', user.username)
+            user.email = request.form.get('useremail', user.email)
+            session.commit()
+            return { "message": "Success updating data"}
+        else:
+            # Jika user tidak ditemukan, kembalikan respons yang sesuai
+            return { "error": "User not found"}, 404
+
     except Exception as e:
         session.rollback()
+        return { "error": f"An error occurred: {e}"}, 500
 
-    return { "message": "Success updating data"}
+    finally:
+        # Pastikan untuk menutup sesi setelah digunakan
+        session.close()
+
     
 
 

@@ -106,7 +106,9 @@ def deposit():
     except Exception as e:
         session.rollback()
         return jsonify({'error': f'An error occurred while depositing money: {e}'}), 500
+    
 
+ 
 @transactions_routes.route('/transactions', methods=['GET'])
 @login_required
 def get_transactions():
@@ -136,3 +138,22 @@ def get_transactions_by_account(account_id):
             
     else:
         return jsonify({'error': 'The account does not belong to the user'}), 400
+
+@transactions_routes.route('/transactions/<int:transaction_id>', methods=['GET'])
+@login_required
+def get_transaction_by_id(transaction_id):
+    session = Session()
+    user_id = current_user.id
+    
+    try:
+        transaction = session.query(Transactions).filter_by(id=transaction_id).first()
+        if not transaction:
+            return jsonify({'error': 'Transaction not found'}), 404
+        
+        if check_account_ownership(transaction.from_account_id, user_id, session):
+            return jsonify({'transaction': transaction.to_dict()}), 200
+        else:
+            return jsonify({'error': 'You do not have permission to access this transaction'}), 403
+        
+    except Exception as e:
+        return jsonify({'error': f'An error occurred: {e}'}), 500
