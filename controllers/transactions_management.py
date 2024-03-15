@@ -43,9 +43,6 @@ def transfer():
     amount = data.get('amount')
     description = data.get('description')
 
-    if current_user.id != from_account_id:
-        return jsonify({'error': 'You do not have permission to access this account'}), 403
-
     if check_balance(from_account_id, amount, session):
         if transfer_money(from_account_id, to_account_id, amount, description, session):
             return jsonify({'message': 'Money transferred successfully'}), 200
@@ -60,9 +57,6 @@ def withdrawal():
     from_account_id = data.get('from_account_id')
     amount = data.get('amount')
     description = data.get('description')
-
-    if current_user.id != from_account_id:
-        return jsonify({'error': 'You do not have permission to access this account'}), 403
 
     if check_balance(from_account_id, amount, session):
         try:
@@ -89,9 +83,6 @@ def deposit():
     to_account_id = data.get('to_account_id')
     amount = data.get('amount')
     description = data.get('description')
-
-    if current_user.id != to_account_id:
-        return jsonify({'error': 'You do not have permission to access this account'}), 403
 
     try:
         to_account = session.query(Accounts).filter_by(id=to_account_id).first()
@@ -128,8 +119,15 @@ def get_transactions_by_account(account_id):
     session = Session()
     user_id = current_user.id
     
+    # Ambil parameter account_id dari URL
+    # Anda dapat mengaksesnya menggunakan `request.args.get('account_id')`
+    # Pastikan untuk mengonversinya menjadi integer jika diperlukan
+    account_id = int(account_id)
+
+    # Periksa apakah akun milik pengguna yang saat ini masuk
     if check_account_ownership(account_id, user_id, session):
         try:
+            # Dapatkan transaksi yang berasal dari akun dengan ID yang diberikan
             transactions = session.query(Transactions).filter_by(from_account_id=account_id).all()
             return jsonify({'transactions': [transaction.to_dict() for transaction in transactions]}), 200
                 
@@ -138,6 +136,7 @@ def get_transactions_by_account(account_id):
             
     else:
         return jsonify({'error': 'The account does not belong to the user'}), 400
+
 
 @transactions_routes.route('/transactions/<int:transaction_id>', methods=['GET'])
 @login_required
