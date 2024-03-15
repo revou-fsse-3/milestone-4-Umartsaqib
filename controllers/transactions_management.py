@@ -125,7 +125,7 @@ def get_transactions_by_account(account_id):
     account_id = int(account_id)
 
     # Periksa apakah akun milik pengguna yang saat ini masuk
-    if check_account_ownership(account_id, user_id, session):
+    if check_account_ownership(account_id, user_id):
         try:
             # Dapatkan transaksi yang berasal dari akun dengan ID yang diberikan
             transactions = session.query(Transactions).filter_by(from_account_id=account_id).all()
@@ -149,7 +149,7 @@ def get_transaction_by_id(transaction_id):
         if not transaction:
             return jsonify({'error': 'Transaction not found'}), 404
         
-        if check_account_ownership(transaction.from_account_id, user_id, session):
+        if check_account_ownership(transaction.from_account_id, user_id):
             return jsonify({'transaction': transaction.to_dict()}), 200
         else:
             return jsonify({'error': 'You do not have permission to access this transaction'}), 403
