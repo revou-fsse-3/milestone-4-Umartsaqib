@@ -138,14 +138,14 @@ def get_transactions_by_account(account_id):
         return jsonify({'error': 'The account does not belong to the user'}), 400
 
 
-@transactions_routes.route('/transactions/<int:transaction_id>', methods=['GET'])
+@transactions_routes.route('/transaction/<int:transactions_id>', methods=['GET'])
 @login_required
-def get_transaction_by_id(transaction_id):
+def get_transaction_by_id(transactions_id):
     session = Session()
     user_id = current_user.id
     
     try:
-        transaction = session.query(Transactions).filter_by(id=transaction_id).first()
+        transaction = session.query(Transactions).filter_by(id=transactions_id).first()
         if not transaction:
             return jsonify({'error': 'Transaction not found'}), 404
         
