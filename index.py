@@ -12,13 +12,14 @@ from flask_login import LoginManager
 from models.user import User
 import os
 
-from controllers.user import user_routes
-from controllers.accounts import accounts_routes
-from controllers.transactions import transactions_routes
+from controllers.user_management import user_routes
+from controllers.accounts_management import accounts_routes
+from controllers.transactions_management import transactions_routes
 
 load_dotenv()
 
 app = Flask(__name__)
+
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 login_manager = LoginManager()
@@ -31,6 +32,7 @@ def load_user(user_id):
     session = Session()
 
     return session.query(User).get(int(user_id))
+
 app.register_blueprint(user_routes)
 app.register_blueprint(accounts_routes)
 app.register_blueprint(transactions_routes)

@@ -34,3 +34,7 @@ CREATE TABLE transactions(
     description VARCHAR(255),
     created_at DATETIME
 );
+
+SELECT * FROM user;
+SELECT * FROM accounts;
+SELECT * FROM transactions;

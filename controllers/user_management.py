@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, jsonify
 from connectors.mysql_connector import engine
 from models.user import User
 from sqlalchemy.orm import sessionmaker
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 
 user_routes = Blueprint('user_routes', __name__)
 
@@ -58,6 +58,14 @@ def do_user_login():
 
     except Exception as e:
         return jsonify({"message": "Login Failed"})
+    
+
+@user_routes.route('/profile', methods=['GET'])
+@login_required
+def profile():
+    user = current_user
+    return jsonify({'username': user.username, 'email': user.email}), 200
+
 
 # done
 @user_routes.route("/logout", methods=['GET'])
@@ -89,8 +97,6 @@ def get_users():
         return {'error': f'An error occurred: {e}'}, 500
 
 # done
-from flask import request
-
 # GET user by ID
 @user_routes.route('/users/<int:user_id>', methods=['GET'])
 @login_required
@@ -119,6 +125,10 @@ def get_user_by_id(user_id):
 @user_routes.route('/users/<int:user_id>', methods=['PUT'])
 @login_required
 def update_user(user_id):
+    # Only allow the user to update their own data
+    if current_user.id != user_id:
+        return {'error': 'Unauthorized'}, 403
+
     # Connect to the database
     connection = engine.connect()
     Session = sessionmaker(connection)
@@ -153,6 +163,7 @@ def update_user(user_id):
         # If there is an error updating the user
         session.rollback()
         return {'error': f'An error occurred: {e}'}, 500
+
 
 
 def get_session():

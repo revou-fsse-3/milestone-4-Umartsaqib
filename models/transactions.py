@@ -3,7 +3,10 @@ from sqlalchemy import Integer, String, DateTime, ForeignKey, DECIMAL
 from models.base import Base
 from sqlalchemy.sql import func
 
-class Transactions(Base):
+
+from flask_login import UserMixin
+
+class Transactions(Base, UserMixin):
     # Define the table name
     __tablename__ = 'transactions'
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -32,4 +35,4 @@ class Transactions(Base):
         
     # Add a method to return the transaction as a string
     def __repr__(self):
-        return f'<Transaction {self.id}>'
+        return f'<Transactions {self.id}>'
